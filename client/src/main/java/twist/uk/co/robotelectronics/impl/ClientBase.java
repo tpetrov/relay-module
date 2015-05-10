@@ -5,6 +5,9 @@ import twist.uk.co.robotelectronics.ClientException;
 import twist.uk.co.robotelectronics.data.ModuleInfo;
 
 import java.nio.charset.StandardCharsets;
+import java.util.BitSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public abstract class ClientBase implements Client {
 
@@ -14,6 +17,8 @@ public abstract class ClientBase implements Client {
         MODULE_INFO((byte) 0x10),
         DIGIT_ACTIVATE((byte) 0x20),
         DIGIT_INACTIVATE((byte) 0x21),
+        DIGITAL_SET_OUTPUTS((byte) 0x23),
+        DIGITAL_GET_OUTPUTS((byte) 0x24),
         PASSWORD_ENTRY((byte) 0x79),
         GET_UNLOCK_TIME((byte) 0x7A);
 
@@ -67,6 +72,48 @@ public abstract class ClientBase implements Client {
                 },
                 result);
         return result[0] == 0;
+    }
+
+    @Override
+    public boolean isActivate(int itemNumber) {
+        validateDigitalItemNumber(itemNumber);
+        Set<Integer> state = getDigitalOutputsState();
+        return state.contains(itemNumber);
+    }
+
+    @Override
+    public boolean setDigitalOutputsState(Set<Integer> state) {
+        BitSet bitSet = new BitSet();
+        for(Integer itemNumber : state) {
+            validateDigitalItemNumber(itemNumber);
+            bitSet.set(itemNumber - 1);
+        }
+        byte[] stateArray = bitSet.toByteArray();
+        byte[] params = new byte[2];
+        System.arraycopy(stateArray, 0, params, 0, Math.min(stateArray.length, 2));
+        byte[] result = new byte[1];
+        sendAndReceive(
+                CommandName.DIGITAL_SET_OUTPUTS,
+                params,
+                result);
+        return result[0] == 0;
+    }
+
+    @Override
+    public Set<Integer> getDigitalOutputsState() {
+        byte[] result = new byte[2];
+        sendAndReceive(
+                CommandName.DIGITAL_GET_OUTPUTS,
+                EMPTY_ARRAY,
+                result);
+        Set<Integer> resultSet = new LinkedHashSet<>();
+        BitSet bitSet = BitSet.valueOf(result);
+        int lastSetBit = bitSet.nextSetBit(0);
+        while(lastSetBit != -1) {
+            resultSet.add(lastSetBit + 1);
+            lastSetBit = bitSet.nextSetBit(lastSetBit + 1);
+        }
+        return resultSet;
     }
 
     @Override

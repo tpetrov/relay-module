@@ -2,6 +2,8 @@ package twist.uk.co.robotelectronics;
 
 import twist.uk.co.robotelectronics.data.ModuleInfo;
 
+import java.util.Set;
+
 public interface Client {
 
     ModuleInfo getModuleInfo();
@@ -13,6 +15,12 @@ public interface Client {
     boolean deactivate(int itemNumber);
 
     boolean deactivateForMillis(int itemNumber, long millis);
+
+    boolean isActivate(int itemNumber);
+
+    boolean setDigitalOutputsState(Set<Integer> state);
+
+    Set<Integer> getDigitalOutputsState();
 
     boolean isByPasswordProtected();
 
