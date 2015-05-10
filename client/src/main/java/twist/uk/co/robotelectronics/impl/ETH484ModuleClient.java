@@ -1,0 +1,43 @@
+package twist.uk.co.robotelectronics.impl;
+
+public class ETH484ModuleClient extends ETHModuleClient {
+
+    public ETH484ModuleClient(String host, int port) {
+        super(host, port);
+    }
+
+    @Override
+    protected void validateDigitalItemNumber(int itemNumber) throws IllegalArgumentException {
+        if(1 <= itemNumber && itemNumber <= 4) {
+            return;
+        }
+        if(9 <= itemNumber && itemNumber <= 16) {
+            return;
+        }
+        throw new IllegalArgumentException("Valid digital item number must be in range [1-4, 9-16]");
+    }
+
+    @Override
+    protected void validateDigitalInputItemNumber(int itemNumber) throws IllegalArgumentException {
+        if(!(9 <= itemNumber && itemNumber <= 16)) {
+            throw new IllegalArgumentException("Valid digital input item number must be in range [9-16]");
+        }
+    }
+
+    @Override
+    protected void validateAnalogItemNumber(int itemNumber) throws IllegalArgumentException {
+        if(!(1 <= itemNumber && itemNumber <= 4)) {
+            throw new IllegalArgumentException("Valid analog item number must be in range [1-4]");
+        }
+    }
+
+    public static void main(String[] args) {
+        ETHModuleClient client = new ETH484ModuleClient("192.168.1.7", 17494);
+        System.out.println("Module id: " + client.getModuleInfo().getModuleId());
+        System.out.println("Activated: " + client.activate(1));
+//        System.out.println("Is By Password Protected: " + client.isByPasswordProtected());
+//        System.out.println("login: " + client.login("password"));
+//        System.out.println("Time Before Session End: " + client.timeBeforeSessionEnd());
+        client.close();
+    }
+}
