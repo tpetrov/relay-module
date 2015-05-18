@@ -22,11 +22,19 @@ public interface Client {
 
     Set<Integer> getDigitalOutputsState();
 
+    Set<Integer> getDigitalInputsState();
+
+    int getAnalogValue(int itemNumber);
+
+    void executeCommand(String command);
+
     boolean isByPasswordProtected();
 
     boolean login(String password);
 
     int timeBeforeSessionEnd() throws NoPasswordProtectionException;
+
+    void logout();
 
     void close();
 

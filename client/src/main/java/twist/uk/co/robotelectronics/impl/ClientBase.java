@@ -19,8 +19,12 @@ public abstract class ClientBase implements Client {
         DIGIT_INACTIVATE((byte) 0x21),
         DIGITAL_SET_OUTPUTS((byte) 0x23),
         DIGITAL_GET_OUTPUTS((byte) 0x24),
+        DIGITAL_GET_INPUTS((byte) 0x25),
+        ANALOG_GET_OUTPUTS((byte) 0x32),
+        ASCII_COMMAND((byte) 0x3A),
         PASSWORD_ENTRY((byte) 0x79),
-        GET_UNLOCK_TIME((byte) 0x7A);
+        GET_UNLOCK_TIME((byte) 0x7A),
+        LOGOUT((byte) 0x7B);
 
         private final byte value;
 
@@ -106,14 +110,50 @@ public abstract class ClientBase implements Client {
                 CommandName.DIGITAL_GET_OUTPUTS,
                 EMPTY_ARRAY,
                 result);
+        return toSet(result);
+    }
+
+    @Override
+    public Set<Integer> getDigitalInputsState() {
+        byte[] result = new byte[2];
+        sendAndReceive(
+                CommandName.DIGITAL_GET_INPUTS,
+                EMPTY_ARRAY,
+                result);
+        return toSet(result);
+    }
+
+    private Set<Integer> toSet(byte[] data) {
         Set<Integer> resultSet = new LinkedHashSet<>();
-        BitSet bitSet = BitSet.valueOf(result);
+        BitSet bitSet = BitSet.valueOf(data);
         int lastSetBit = bitSet.nextSetBit(0);
         while(lastSetBit != -1) {
             resultSet.add(lastSetBit + 1);
             lastSetBit = bitSet.nextSetBit(lastSetBit + 1);
         }
         return resultSet;
+    }
+
+    @Override
+    public int getAnalogValue(int itemNumber) {
+        validateAnalogItemNumber(itemNumber);
+        byte[] result = new byte[2];
+        sendAndReceive(
+                CommandName.ANALOG_GET_OUTPUTS,
+                new byte[] {
+                        (byte)itemNumber
+                },
+                result);
+        return ((result[0] & 0xFF) << 8) + (result[1] & 0xFF);
+    }
+
+    @Override
+    public void executeCommand(String command) {
+        byte[] result = new byte[0];
+        sendAndReceive(
+                CommandName.ASCII_COMMAND,
+                command.getBytes(StandardCharsets.UTF_8),
+                result);
     }
 
     @Override
@@ -147,6 +187,15 @@ public abstract class ClientBase implements Client {
             throw new NoPasswordProtectionException();
         }
         return (result[0] & 0xFF);
+    }
+
+    @Override
+    public void logout() {
+        byte[] result = new byte[0];
+        sendAndReceive(
+                CommandName.LOGOUT,
+                EMPTY_ARRAY,
+                result);
     }
 
     protected abstract void validateDigitalItemNumber(int itemNumber) throws IllegalArgumentException;

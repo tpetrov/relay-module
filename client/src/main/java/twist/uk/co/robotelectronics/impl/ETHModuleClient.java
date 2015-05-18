@@ -9,6 +9,8 @@ import java.net.Socket;
 
 public abstract class ETHModuleClient extends ClientBase {
 
+    private static final long TIME_TO_SLEEP_ON_VOID_OUTPUT = 50L;
+
     private final String host;
     private final int port;
 
@@ -52,6 +54,15 @@ public abstract class ETHModuleClient extends ClientBase {
     private static void sendAndReceive(Socket socket, byte[] bytesToSend, byte[] result) throws IOException {
         try(OutputStream outputStream = socket.getOutputStream()) {
             outputStream.write(bytesToSend);
+            if(result.length == 0) {
+                try {
+                    Thread.sleep(TIME_TO_SLEEP_ON_VOID_OUTPUT);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                return;
+            }
             try(InputStream inputStream = socket.getInputStream()) {
                 inputStream.read(result);
             }
