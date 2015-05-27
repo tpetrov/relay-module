@@ -37,6 +37,7 @@ public class ETH484ModuleClient extends ETHModuleClient {
 
     public static void main(String[] args) {
         ETHModuleClient client = new ETH484ModuleClient("192.168.1.4", 17494);
+        System.out.println(client.isActivate(16));
 //        System.out.println("Module id: " + client.getModuleInfo().getModuleId());
 //        System.out.println("Activated: " + client.activate(1));
 //        System.out.println("Is By Password Protected: " + client.isByPasswordProtected());
