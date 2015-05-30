@@ -5,8 +5,6 @@ import twist.uk.co.robotelectronics.ClientException;
 import twist.uk.co.robotelectronics.data.ModuleInfo;
 
 import java.nio.charset.StandardCharsets;
-import java.util.BitSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 public abstract class ClientBase implements Client {
@@ -20,7 +18,7 @@ public abstract class ClientBase implements Client {
         DIGITAL_SET_OUTPUTS((byte) 0x23),
         DIGITAL_GET_OUTPUTS((byte) 0x24),
         DIGITAL_GET_INPUTS((byte) 0x25),
-        ANALOG_GET_OUTPUTS((byte) 0x32),
+        ANALOG_GET_INPUT((byte) 0x32),
         ASCII_COMMAND((byte) 0x3A),
         PASSWORD_ENTRY((byte) 0x79),
         GET_UNLOCK_TIME((byte) 0x7A),
@@ -79,7 +77,7 @@ public abstract class ClientBase implements Client {
     }
 
     @Override
-    public boolean isActivate(int itemNumber) {
+    public boolean isActivated(int itemNumber) {
         validateDigitalItemNumber(itemNumber);
         Set<Integer> state = getDigitalOutputsState();
         return state.contains(itemNumber);
@@ -87,14 +85,10 @@ public abstract class ClientBase implements Client {
 
     @Override
     public boolean setDigitalOutputsState(Set<Integer> state) {
-        BitSet bitSet = new BitSet();
         for(Integer itemNumber : state) {
             validateDigitalItemNumber(itemNumber);
-            bitSet.set(itemNumber - 1);
         }
-        byte[] stateArray = bitSet.toByteArray();
-        byte[] params = new byte[2];
-        System.arraycopy(stateArray, 0, params, 0, Math.min(stateArray.length, 2));
+        byte[] params = Utils.setToArray(state, 2);
         byte[] result = new byte[1];
         sendAndReceive(
                 CommandName.DIGITAL_SET_OUTPUTS,
@@ -110,7 +104,7 @@ public abstract class ClientBase implements Client {
                 CommandName.DIGITAL_GET_OUTPUTS,
                 EMPTY_ARRAY,
                 result);
-        return toSet(result);
+        return Utils.arrayToSet(result);
     }
 
     @Override
@@ -120,18 +114,7 @@ public abstract class ClientBase implements Client {
                 CommandName.DIGITAL_GET_INPUTS,
                 EMPTY_ARRAY,
                 result);
-        return toSet(result);
-    }
-
-    private Set<Integer> toSet(byte[] data) {
-        Set<Integer> resultSet = new LinkedHashSet<>();
-        BitSet bitSet = BitSet.valueOf(data);
-        int lastSetBit = bitSet.nextSetBit(0);
-        while(lastSetBit != -1) {
-            resultSet.add(lastSetBit + 1);
-            lastSetBit = bitSet.nextSetBit(lastSetBit + 1);
-        }
-        return resultSet;
+        return Utils.arrayToSet(result);
     }
 
     @Override
@@ -139,12 +122,12 @@ public abstract class ClientBase implements Client {
         validateAnalogItemNumber(itemNumber);
         byte[] result = new byte[2];
         sendAndReceive(
-                CommandName.ANALOG_GET_OUTPUTS,
+                CommandName.ANALOG_GET_INPUT,
                 new byte[] {
                         (byte)itemNumber
                 },
                 result);
-        return ((result[0] & 0xFF) << 8) + (result[1] & 0xFF);
+        return Utils.arrayToInt(result);
     }
 
     @Override
@@ -199,8 +182,6 @@ public abstract class ClientBase implements Client {
     }
 
     protected abstract void validateDigitalItemNumber(int itemNumber) throws IllegalArgumentException;
-
-    protected abstract void validateDigitalInputItemNumber(int itemNumber) throws IllegalArgumentException;
 
     protected abstract void validateAnalogItemNumber(int itemNumber) throws IllegalArgumentException;
 
