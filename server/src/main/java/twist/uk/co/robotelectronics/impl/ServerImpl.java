@@ -11,8 +11,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerImpl implements Server {
+
+    private static final Logger log = Logger.getLogger(ServerImpl.class.getName());
 
     private static final String MAX_CONNECTION_QUEUE_LENGTH_PROPERTY = "twist.uk.co.robotelectronics.maxConnectionQueueLength";
     private static final int MAX_CONNECTION_QUEUE_DEFAULT_LENGTH = 20;
@@ -55,10 +59,14 @@ public class ServerImpl implements Server {
                     while (working.get() && !serverSocket.isClosed() && !Thread.interrupted()) {
                         try (Socket socket = serverSocket.accept()) {
                             doProcessing(socket, listener);
+                        } catch(IOException e) {
+                            log.log(Level.WARNING, "IOException on reading", e);
+                        } catch (RuntimeException e) {
+                            log.log(Level.SEVERE, "RuntimeException on processing", e);
                         }
                     }
                 } catch(IOException e) {
-                    e.printStackTrace();
+                    log.log(Level.SEVERE, "IOException on port opening", e);
                 }
             }
         }.start();

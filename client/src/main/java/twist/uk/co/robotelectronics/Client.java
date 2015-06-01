@@ -16,7 +16,7 @@ public interface Client {
 
     boolean deactivateForMillis(int itemNumber, long millis);
 
-    boolean isActivate(int itemNumber);
+    boolean isActivated(int itemNumber);
 
     boolean setDigitalOutputsState(Set<Integer> state);
 
