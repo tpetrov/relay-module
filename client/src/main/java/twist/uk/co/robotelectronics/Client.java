@@ -4,7 +4,7 @@ import twist.uk.co.robotelectronics.data.ModuleInfo;
 
 import java.util.Set;
 
-public interface Client {
+public interface Client extends AutoCloseable {
 
     ModuleInfo getModuleInfo();
 
@@ -36,6 +36,7 @@ public interface Client {
 
     void logout();
 
+    @Override
     void close();
 
     public static class NoPasswordProtectionException extends RuntimeException { }

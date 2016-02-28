@@ -27,7 +27,7 @@ public class ETH484ModuleClientTest {
     }
 
     @AfterClass
-    public static void clean() {
+    public static void clean() throws Exception {
         client.close();
     }
 
